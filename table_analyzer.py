@@ -425,7 +425,7 @@ if __name__ == '__main__':
                              
         args = ['--runner'               , "DataflowRunner", #"DirectRunner", #
                 '--job_name'             , job_id,
-                '--input_bucket'         , tables[system_table]+'2019/10/', # FIXME
+                '--input_bucket'         , tables[system_table],
                 '--output_bucket'        , output_bucket,
                 '--temp_location'        , output_bucket+'tmp/',
                 '--project'              , project_id,
