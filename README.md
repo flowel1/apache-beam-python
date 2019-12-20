@@ -109,7 +109,7 @@ Meaningful and unique names should be used for each of the pipeline steps.
 
 ### Relevant pipeline operations
 
-All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be standard methods from the ```apache_beam``` library, possibly extended or customized.
+All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be taken from standard classes in the ```apache_beam``` library, possibly extended or customized. Our script uses the following Apache Beam classes to define the various processing steps.
 
 - ```beam.Create```
 
@@ -124,7 +124,7 @@ Takes a PCollection of Avro file paths as input and returns the contents of all 
 Reads the contents of the .txt file identified by path file_pattern and returns its contents into a PCollection. Each element in the PCollection is a string containing one row in the input file.
 
 - ```beam.io.WriteToText(file_pattern)```
-
+Takes a PCollection of strings as input and writes them all into the .txt file identified by path file_pattern.
 
 
 Given a subclass of ```beam.DoFn```, say ```MyDoFn```, ```beam.ParDo(MyDoFn())``` runs the method "process" defined in ```MyDoFn``` on all elements of the input collection. The computation is performed in parallel.
