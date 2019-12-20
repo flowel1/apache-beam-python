@@ -1,6 +1,6 @@
 # Data Exploration with Apache Beam
 
-This script implements a sample Apache Beam pipeline to extract key aggregate information and quality metrics (number of corrupt records, most frequent values for each field, number of record insertions by time period...) from huge amounts of raw data stored as Avro files.
+This script implements a sample Apache Beam pipeline to extract key **aggregate information** and quality metrics (number of corrupt records, most frequent values for each field, number of record insertions by time period...) from **huge amounts of raw relational data**.
 
 Being written in Python, it is ideal for Data Scientists who need to perform an initial data exploration in order to identify potential opportunities to develop Machine Learning models.
 
