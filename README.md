@@ -1,18 +1,20 @@
 # Data Exploration with Apache Beam
 
-This script implements a sample Apache Beam pipeline to extract key **aggregate information** and quality metrics (number of corrupt records, most frequent values for each field, number of record insertions by time period...) from **huge amounts of raw relational data**.
+This script implements a sample Apache Beam pipeline to extract key **aggregate information** and quality metrics (number of corrupted records, most frequent values for each field, number of record insertions by time period...) from **huge amounts of raw relational data**.
 
-Being written in Python, it is ideal for Data Scientists who need to perform an initial data exploration in order to identify potential opportunities to develop Machine Learning models.
+Being written in **Python**, it is ideal for Data Scientists who need to perform an initial data exploration in order to identify potential opportunities to develop Machine Learning models.
 
 ## Use cases
 
-When huge amounts of raw data are ingested from many heterogeneous source systems into a data lake (e.g. Google Cloud Storage), understanding their exact content and quality can be challenging, especially if no unified data governance policy has been adopted up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
+Data lakes are typically populated with large amounts of raw data ingested from many heterogeneous source systems. Understanding the data's content and quality can often prove to be challenging, especially if no unified data governance policy has been adopted in the organization up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
+
+Understanding your data is a crucial step in order to define further processing steps like data normalization, re-mapping or transfer to a data warehouse where they can be analyzed, displayed in dashboards or be fed into Machine Learning models.
 
 In these cases, a useful starting point would be some data exploration script extracting quick aggregate metrics and basic table / field information like number of corrupt records, most frequent values for each column, number of record insertions by time period, etc. For limited amounts of data, all these calculations can be executed very straightforwardly by uploading the data into a pandas dataframe and running standard methods like ```df['column_of_interest'].value_counts()```. However, in these types of projects, data can rapidly grow too big to fit in memory, even for a single table. This requires that we go beyond local in-memory calculation and resort to some Big Data technology running on multiple computers in parallel.
 
 For Data Scientists with limited experience with Java / Scala and parallel computation frameworks like Apache Spark, a good solution is to write an Apache Beam pipeline in Python and run it on a managed paid service like Google Dataflow. Using a managed service has the advantage of not having to worry about dev-ops issues like cluster provisioning and management. All the analyst has to do is write the pipeline using the methods provided by apache_beam, which is not different from using any other Python library, and then submit the script to Google Dataflow by calling a dedicated API. The script will be executed in parallel on machines in Google's cloud.
 
-## Example on Google Cloud Platform
+## Our example: Google Cloud Platform and Avro files
 We consider a use case where raw data are exported from several source systems and ingested into Google Cloud Storage buckets as Avro files. We assume that the bucket hierarchy has the following structure:
 ```
 all-my-data
