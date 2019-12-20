@@ -18,34 +18,28 @@ For Data Scientists with limited experience with Java / Scala and parallel compu
 
 ## Our example: analyzing Avro files in Google Cloud Storage
 We consider a use case where raw data are exported from several source systems and ingested into **Google Cloud Storage** buckets as **Avro files**. We assume that the bucket hierarchy has the following structure:
-```
-all-my-data (main bucket)
-	  system-1
-		    table-1-1
-			      ...avro files
-		    table-1-2
-			      ...avro files
-	  system-2
-		    table-2-1
-			      ...
-```
-We assume that table contains a technical column, say RECORD_INSERTION_TIME, containing the datetime when the record was inserted into the source table.
+
+![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/bucket-hierarchy.png)
+
+We assume moreover that each table contains a technical column, say RECORD_INSERTION_TIME, containing the datetime when the record was inserted into the source table.
 For each table, we would like to:
-- find out whether there are records with null or erroneous (i.e., non-datetime) values of RECORD_INSERTION_TIME and store these values in a dedicated .txt file
-- for each column, find the different data types in the columns and the top 10 most frequent values by type with the minimum and maximum RECORD_INSERTION_TIME values
+- find out whether there are records with null or erroneous (i.e., non-datetime) values of RECORD_INSERTION_TIME and store these values in a dedicated file
+- for each column, find the different data types in the column and the top 10 most frequent values by type with the corresponding minimum and maximum RECORD_INSERTION_TIME values
 - for each column and each time period (say, year-month), count the amount of records and null records inserted. This is useful in order to detect cases when data for a given column have only started being ingested after a certain time, or when they have stopped being ingested after a certain time.
 
-You need to have a project in Google Cloud with billing activated in order to run this script.
-The code is written using the Apache Beam SDK.
-CAUTION: at the moment, Python 2.7 must be used, since Apache Beam's version for Python 3 is still unstable. We expect this to change soon, since Python 2 will reach its end of life by January 2020.
+### Prerequisites
+You need to have a project in Google Cloud with billing activated in order to run this script. You must also have IAM permissions to read from / write to the necessary Google Cloud Storage buckets and to submit jobs to Google Dataflow.
 
-To create a new virtual environment with Python 2.7 and activate it, you can open your Anaconda prompt and type the following commands:
+The code is written using the Apache Beam SDK for Python. CAUTION: at the moment, **Python 2.7** must be used, since Apache Beam's version for Python 3 is still unstable. We expect this to change soon, since Python 2 will reach its end of life by January 2020.
+
+We advise that you use **Anaconda** to manage Python environments and launch the script. To create a new virtual environment with Python 2.7 and activate it, you can open your Anaconda prompt and execute the following commands:
 ```
 conda create -n py27 python=2.7
 conda activate py27
 ```
+We also recommend **Spyder** as a development enviroment for your Python scripts.
 
-The command to install the Apache Beam SDK is
+The command to install the **Apache Beam SDK** is
 ```
 pip install apache-beam
 ```
@@ -53,8 +47,13 @@ We also need to install the gcsfs package to read from and write to Google Cloud
 ```
 pip install gcsfs
 ```
-The code containing the pipeline definition and execution call can be written locally using any development environment (e.g. Spyder). In the execution call, you must specify whether you want the pipeline to be executed locally on your computer (option runner = DirectRunner) or in Google Dataflow (option runner = DataflowRunner).
-Local execution only makes sense for testing and bug fixing and should be launched on just a small subset of the available data (perhaps one or two Avro files), since a private laptop would most likely take ages to run the whole job or not make it at all - which is the reason why we borrow Google's resources instead.
+Installing the **Google Cloud SDK** will enable you to transfer files to Google Cloud Storage using the ```gsutil``` command in the command prompt.
+
+
+### Pipeline development and submission
+
+The Python script containing the pipeline definition and execution call can be written locally using any development environment (e.g. Spyder). In the execution call, you must specify whether you want the pipeline to be executed locally on your computer (option ```runner = DirectRunne```r) or in Google Dataflow (option ```runner = DataflowRunner```).
+Local execution only makes sense for testing and bug fixing and should be launched on just a small subset of the available data (perhaps one or two Avro files), since a personal laptop would most likely take ages to run the whole job or not make it at all - which is the reason why we borrow Google's resources instead.
 
 NB. for simpler types of analysis, BigQuery can be used instead:
 create a table with external reference (must be done programmatically)
