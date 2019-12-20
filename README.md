@@ -74,14 +74,22 @@ result.wait_until_finish()
 
 Pipeline steps are defined by writing something like
 ```python
-intermediate_output = (p | 'step 1' >> some_method(some_arguments) # the definition of some_method must also be provided
-			 | 'step 2' >> some_other_method(some_other_arguments))
-final_output = (intermediate_output | 'step 3' >> yet_another_method(yet_other_arguments))
+input_data = (p | 'read data' >> method_to_read_data())
+intermediate_output = (input_data | 'processing step 1' >> some_method(some_arguments)
+			 	  | 'processing step 2' >> some_other_method(some_other_arguments))
+final_output = (intermediate_output | 'processing step 3' >> yet_another_method(yet_other_arguments))
 ```
 In order to store the computation's results somewhere, you could end your pipeline with
 ```python
 (final_output | 'write results' >> method_that_writes_results_to_some_file())
 ```
+Branching pipelines may also be defined: for example, adding a few more rows like
+```python
+side_output = (intermediate_output | 'alternative processing' 	 >> alternative_processing_method()
+				   | 'write alternative results' >> method_that_writes_results_to_some_file())
+(final_output | 'write results to BigQuery too' >> method_that_writes_results_to_BigQuery())
+```
+generates a pipeline like this:
 
 Try to use meaningful names for the steps.
 
