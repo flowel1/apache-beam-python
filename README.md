@@ -163,5 +163,8 @@ We use CombinePerKey instead of GroupByKey because of better performance.
 
 ### Pipeline structure
 The file {filename_processed_files}.txt contains the list of all Avro files that have already been processed. It is updated dynamically at every launch.
+**Basic pipeline**
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/pipeline-basic.png)
+
+**Incremental pipeline**
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/pipeline-incremental.png)
