@@ -150,4 +150,6 @@ class MyCombineFn(beam.transforms.core.CombineFn):
 ```beam.combiners.Top.LargestPerKey(10)```
 (key, (size, value)) --> extracts the top 10 elements with largest size
 
+If you need non-default packages in your script, you can list them in a ```requirements.txt``` file and provide the local file path as an input argument ```--requirements_file```.
 
+We use CombinePerKey instead of GroupByKey because of better performance.
