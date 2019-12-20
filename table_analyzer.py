@@ -117,7 +117,7 @@ def run(argv = None):
     pipeline_options.view_as(SetupOptions).save_main_session = True  # see https://beam.apache.org/releases/pydoc/2.7.0/_modules/apache_beam/io/gcp/pubsub_it_pipeline.html
     p = beam.Pipeline(options = pipeline_options)
     
-    # Retrieve list of files to process.
+    # Retrieve list of Avro files to process.
     # If another analysis has already been run, only the new files are analyzed and the results are then merged
     # with those from the last analysis in an incremental way.
     files_to_process = ['gs://{}'.format(fpath) for fpath in fs.walk(known_args.input_bucket)]
@@ -141,22 +141,22 @@ def run(argv = None):
            (p
             | 'get_files_list'          >> beam.Create(files_to_process)    # create PCollection containing the names of all files to process
             | 'read_files'              >> beam.io.avroio.ReadAllFromAvro() # returns all rows in all files as dictionaries 
-                                                                            # {<column name> --> <column value at the row>}
-            | 'parse_and_classify_rows' >> beam.ParDo(ParseRowDoFn()).with_outputs() # applies method ParseRowDoFn to each row
+                                                                            # {column name : column value at the row}
+            | 'parse_and_classify_rows' >> beam.ParDo(ParseRowDoFn()).with_outputs() # applies method process in ParseRowDoFn to each row
             )
     
     valid_inputs  = processed_input[None] # main output
     invalid_times = processed_input[ParseRowDoFn.OUTPUT_TAG_INVALID] # secondary output: list of invalid insertion times
     
-    # PIPELINE BRANCH 1: count distinct values with min/max insertion time; filter 10 most frequent values for each column
+    # PIPELINE BRANCH 1: count distinct values with min/max insertion time; filter 10 most frequent values for each column.
     # This performs the equivalent of:
     #       select
     #           col, vtype, value
     #           count(*),
-    #           min(record_insertion_time), # first time when value has appeared in this column
+    #           min(record_insertion_time), # first time when value has appeared in column col
     #           max(record_insertion_time)
     #       from
-    #           {source data}
+    #           valid_inputs
     #       group by
     #           col, vtype, value
     # Inspired by: https://github.com/apache/beam/blob/master/sdks/python/apache_beam/transforms/combiners.py
@@ -180,9 +180,9 @@ def run(argv = None):
         def extract_output(self, accumulator):
             return accumulator
 
-    # Input:  ((col, vtype, value), record_insertion_time)
+    # Input: elements in valid_inputs, which have the form ((col, vtype, value), record_insertion_time)
     # CountMinMaxCombineFn is called for each (col, vtype, value) and operates on element = record_insertion_time.
-    # Output: ((col, vtype, value), (count, min_record_insertion_time, max_record_insertion_time))
+    # Output: ((col, vtype, value), (counts, min_record_insertion_time, max_record_insertion_time))
     # (the output is grouped by key = (col, vtype, value))
     distinct_values = (valid_inputs
                        | 'value_counts' >> beam.CombinePerKey(CountMinMaxCombineFn())
@@ -239,8 +239,8 @@ def run(argv = None):
     def remap_for_filter(x): # input: ((col, vtype, value), (counts, mintime, maxtime))
         ctv, values = x
         return (ctv[0], ctv[1]), (values[0], (ctv[2], values[1], values[2])) # <--- beam.combiners.Top.LargestPerKey requires arguments 
-                                                                             # to be provided in this form (in order to filter largest
-                                                                             # by counts):
+                                                                             # to be provided in this form
+                                                                             # (in order to filter largest by counts):
                                                                              # ((col, vtype), (counts, (value, mindate, maxdate)))
     
     top_values = (distinct_values
@@ -260,7 +260,7 @@ def run(argv = None):
             result += header + value +'\t'+unicode(counts)+'\t'+unicode(mindate)+'\t'+unicode(maxdate)+'\r\n'
         result = result[:-2] # remove last \r\n
         return result
-    # result looks like this (for one single input)
+    # result looks like this (for one single input x): top 10 values
     # col	vtype	value	counts1	   mindate1    maxdate1
     # col	vtype	value	counts2	   mindate2    maxdate2
     # ...
@@ -271,7 +271,7 @@ def run(argv = None):
      | 'save_top_values'   >> beam.io.WriteToText(known_args.output_bucket+'topvalues')
      )
     
-    # PIPELINE BRANCH 2: count total and null values by period (= year/month in this case)
+    # PIPELINE BRANCH 2: count total and null values by period (= year/month in this case).
     # Performs the equivalent of:
     #   select
     #       col,
@@ -279,7 +279,7 @@ def run(argv = None):
     #       count(*),
     #       sum(if(value is null or value = '', 1, 0))
     #   from
-    #       {input data}
+    #       valid_input
     #   group by
     #       col,
     #       year-month
