@@ -175,3 +175,4 @@ The job may take up to a few minutes to appear in the list of running jobs in th
 
 Being a managed service, Dataflow automatically increases or decreases the number of working machines according to the amount of data being processed. This **autoscaling** process can be monitored in a time series plot:
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/autoscaling.png)
+In the above plot, the ideal amount of workers could not be reached due to limitations set by the system administrator (adding more workers increases service costs).
