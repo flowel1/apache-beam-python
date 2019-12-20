@@ -1,5 +1,11 @@
 # Data Exploration with Apache Beam
 
+This script implements a sample Apache Beam pipeline to extract key aggregate information and quality metrics (number of corrupt records, most frequent values for each field, number of record insertions by time period...) from huge amounts of raw data stored as Avro files.
+
+Being written in Python, it is ideal for Data Scientists who need to perform an initial data exploration in order to identify potential opportunities to develop Machine Learning models.
+
+## Use cases
+
 When huge amounts of raw data are ingested from many heterogeneous source systems into a data lake (e.g. Google Cloud Storage), understanding their exact content and quality can be challenging, especially if no unified data governance policy has been adopted up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
 
 In these cases, a useful starting point would be some data exploration script extracting quick aggregate metrics and basic table / field information like number of corrupt records, most frequent values for each column, number of record insertions by time period, etc. For limited amounts of data, all these calculations can be executed very straightforwardly by uploading the data into a pandas dataframe and running standard methods like ```df['column_of_interest'].value_counts()```. However, in these types of projects, data can rapidly grow too big to fit in memory, even for a single table. This requires that we go beyond local in-memory calculation and resort to some Big Data technology running on multiple computers in parallel.
