@@ -1,4 +1,4 @@
-# Exploratory Data Analysis with Python and Apache Beam
+# Data Exploration with Apache Beam
 
 When huge amounts of raw data are ingested from many heterogeneous source systems into a data lake (e.g. Google Cloud Storage), understanding their exact content and quality can be challenging, especially if no unified data governance policy has been adopted up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
 
