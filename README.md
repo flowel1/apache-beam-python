@@ -14,7 +14,7 @@ For limited amounts of data, basic exploration can be done very straightforwardl
 
 For Data Scientists with limited experience with Java / Scala and parallel computation frameworks like Apache Spark, a good solution can be to write an **Apache Beam** pipeline in Python and run it on a **managed paid service** like Google Dataflow. Using a managed service has the advantage of not having to worry about dev-ops issues like cluster provisioning and management. All the analyst has to do is write the pipeline using the methods provided by the ```apache_beam``` library, which is not different from using any other Python library, and then submit the script to Google Dataflow by calling a dedicated API. In this way, the script will be executed in parallel on machines in Google's cloud.
 
-## Our example: analyzing Avro files in Google Cloud Storage with Google Dataflow
+## Our case: analyzing Avro files in Google Cloud Storage with Google Dataflow
 We consider a use case where raw data are exported from several source systems and ingested into **Google Cloud Storage** buckets as **Avro files**. We assume that the bucket hierarchy has the following structure:
 
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/bucket-hierarchy.png)
