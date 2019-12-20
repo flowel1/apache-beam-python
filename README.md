@@ -17,7 +17,7 @@ For Data Scientists with limited experience with Java / Scala and parallel compu
 ## Our case: analyzing Avro files in Google Cloud Storage with Google Dataflow
 We consider a use case where raw data are exported from several source systems and ingested into **Google Cloud Storage** buckets as **Avro files**. We assume that the bucket hierarchy has the following structure:
 
-![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/bucket-hierarchy.png)
+<img src="https://github.com/flowel1/apache-beam-python/blob/master/pictures/bucket-hierarchy.png" width="500">
 
 We assume moreover that each table contains a technical column, say RECORD_INSERTION_TIME, containing the datetime when the record was inserted into the source table.
 For each table, we would like to:
@@ -54,22 +54,27 @@ Finally, installing the **Google Cloud SDK** will enable you to transfer files t
 The Python script containing the pipeline definition and execution call can be written locally using any development environment (like Spyder). In the execution call, you must specify whether you want the pipeline to be executed locally on your computer (option ```runner = DirectRunner```) or in Google Dataflow (option ```runner = DataflowRunner```).
 Local execution only makes sense for testing and bug fixing and should be launched on just a small subset of the available data (perhaps one or two Avro files), since a personal laptop would most likely take ages to run the whole job or not make it at all - which is the reason why we borrow Google's resources instead.
 
-NB. for simpler types of analysis, BigQuery can be used instead:
-create a table with external reference (must be done programmatically)
-run approx_top_count on each column.
-
-Write your pipeline in a method called run
+The pipeline definition 
 ```python
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 
-pipeline_options = PipelineOptions(pipeline_args)
-p = beam.Pipeline(options = pipeline_options) # this declares your pipeline
+def run(args):
+	known_args, pipeline_args = parser.parse_known_args(args)
+	pipeline_options = PipelineOptions(pipeline_args)
+	p = beam.Pipeline(options = pipeline_options) # this declares your pipeline
 
-# write all your pipeline definition + auxiliary methods
+	# write all your pipeline definition + auxiliary methods
 
-result = p.run()
-result.wait_until_finish()    
+	result = p.run()
+	result.wait_until_finish()
+	
+if __name__ == '__main__':
+	args = ['--runner' 	      , "DataflowRunner",
+		'--requirements_file' , path_to_local_rqmt_file
+		# ...add all pipeline configuraion parameters here
+		]
+	run(args)
 ```
 
 Pipeline steps are defined by writing something like
