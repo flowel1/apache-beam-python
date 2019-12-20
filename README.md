@@ -54,8 +54,9 @@ Finally, installing the **Google Cloud SDK** will enable you to transfer files t
 The Python script containing the pipeline definition and execution call can be written locally using any development environment (like Spyder). In the execution call, you must specify whether you want the pipeline to be executed locally on your computer (option ```runner = DirectRunner```) or in Google Dataflow (option ```runner = DataflowRunner```).
 Local execution only makes sense for testing and bug fixing and should be launched on just a small subset of the available data (perhaps one or two Avro files), since a personal laptop would most likely take ages to run the whole job or not make it at all - which is the reason why we borrow Google's resources instead.
 
-The pipeline definition 
+The pipeline definition can be contained in a single script with the following structure:
 ```python
+import argparse
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 
@@ -65,12 +66,14 @@ def run(args):
 	p = beam.Pipeline(options = pipeline_options) # this declares your pipeline
 
 	# write all your pipeline definition + auxiliary methods
+	# ...
+	# ...
 
 	result = p.run()
 	result.wait_until_finish()
 	
 if __name__ == '__main__':
-	args = ['--runner' 	      , "DataflowRunner",
+	args = ['--runner' 	      , "DataflowRunner", # "DirectRunner" to run locally
 		'--requirements_file' , path_to_local_rqmt_file
 		# ...add all pipeline configuraion parameters here
 		]
