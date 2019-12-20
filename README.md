@@ -2,35 +2,44 @@
 
 This script implements a sample Apache Beam pipeline to extract key **aggregate information** and quality metrics (number of corrupted records, most frequent values for each field, number of record insertions by time period...) from **huge amounts of raw relational data** stored in a data lake.
 
-Being written in **Python**, it is ideal for Data Scientists who need to perform an initial data exploration in order to identify potential opportunities for Machine Learning models development.
+Being written in **Python**, it is ideal for Data Scientists who need to perform an initial exploration in order to identify valuable data.
 
 ## Use cases
 
-**Data lakes** are typically populated with large amounts of raw data ingested from many heterogeneous source systems. Understanding the data's content and quality can often prove to be challenging, especially if no unified data governance policy has been adopted in the organization up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
+Data lakes are typically populated with large amounts of raw data ingested from many heterogeneous source systems. Understanding the data's content and quality can often be challenging, especially if no unified data governance policy has been adopted in the organization up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
 
-Understanding the data is crucial in order to define further processing steps like data normalization, re-mapping or transfer to a data warehouse where they can be analyzed, displayed in dashboards or fed into Machine Learning models.
+Understanding the data is crucial in order to define further processing steps like data normalization, re-mapping and transfer to a data warehouse where they can be analyzed, displayed in dashboards or fed into Machine Learning models.
 
 For limited amounts of data, basic exploration can be done very straightforwardly by reading the data into a pandas dataframe and running standard methods like ```df['column_of_interest'].value_counts()```. However, in these types of projects, data can rapidly grow too big to fit in memory, even for a single table. This requires that we go beyond local in-memory calculation and resort to some **Big Data technology** running on multiple computers in **parallel**.
 
-For Data Scientists with limited experience with Java / Scala and parallel computation frameworks like Apache Spark, a good solution can be to write an **Apache Beam** pipeline in Python and run it on a **managed paid service** like Google Dataflow. Using a managed service has the advantage of not having to worry about dev-ops issues like cluster provisioning and management. All the analyst has to do is write the pipeline using the methods provided by the ```apache_beam``` library and then submit the script to Google Dataflow by calling a dedicated API. In this way, the script will be executed in parallel on machines in Google's cloud.
+For Data Scientists with limited experience with Java / Scala and parallel computation frameworks like Apache Spark, a good solution can be to write an **Apache Beam** pipeline in Python and run it on a **managed paid service** like Google Dataflow. Using a managed service has the advantage of not having to worry about dev-ops issues like cluster provisioning and management. All the analyst has to do is write the pipeline using the methods provided by the ```apache_beam``` library and then submit the pipeline for execution on Google Dataflow by calling a dedicated API. In this way, the pipeline will be run in parallel on multiple machines in Google's cloud.
 
 ## Our case: analyzing Avro files in Google Cloud Storage with Google Dataflow
 We consider a use case where raw data are exported from several source systems and ingested into **Google Cloud Storage** buckets as **Avro files**. We assume that the bucket hierarchy has the following structure:
 
 <img src="https://github.com/flowel1/apache-beam-python/blob/master/pictures/bucket-hierarchy.png" width="300">
 
-We assume moreover that each table contains a technical column, say RECORD_INSERTION_TIME, containing the datetime when the record was inserted into the source table.
-For each table, we would like to:
-- find out whether there are records with null or erroneous (i.e., non-datetime) values of RECORD_INSERTION_TIME and store these values in a dedicated file
-- for each column, find the different data types in the column and the top 10 most frequent values by type with the corresponding minimum and maximum RECORD_INSERTION_TIME values
+We assume moreover that each source table has a technical column, say RECORD_INSERTION_TIME, containing the datetime when the record was inserted into the table.
+
+Some of the questions we would like to answer are:
+
+1) What types of data does each column contain? How many of these data are null or empty? This would help us discard useless columns (e.g. constant columns) and focus our attention on more interesting ones.
+
+2) How recent are the non-null data in each column?
+
+3) Are there any obsolete values in the columns (that have stopped being used after a certain moment in time to be replaced by some other value)?
+
+Our pipeline helps addressing these question by doing the following:
+- for each column, find the different data types in the column (including nulls) and the top 10 most frequent values by type with the corresponding minimum and maximum RECORD_INSERTION_TIME values
 - for each column and each time period (say, year-month), count the amount of records and null records inserted. This is useful in order to detect cases when data for a given column have only started being ingested after a certain time, or when they have stopped being ingested after a certain time.
+- in order to avoid crashes, filter out the records with null or erroneous (i.e., non-datetime) values of RECORD_INSERTION_TIME and store these values in a dedicated file.
 
 ### Prerequisites
 You need to have a project in Google Cloud with billing activated in order to run this script. You must also have IAM permissions to read from / write to the necessary Google Cloud Storage buckets and to submit jobs to Google Dataflow.
 
-The code is written using the Apache Beam SDK for Python. At the moment, **Python 2.7** must be used, since Apache Beam's version for Python 3 is still unstable. We expect this to change soon, since Python 2 will reach its end of life by January 2020.
+The code is written using the Apache Beam SDK for Python. At the moment, **Python 2.7** must be used, since Apache Beam version for Python 3 is still unstable. We expect this to change soon, since Python 2 will reach its end of life by January 2020.
 
-We advise that you use **Anaconda** to manage Python environments and **Spyder** as a development environment for your Python scripts.
+We recommend **Anaconda** to manage Python environments and **Spyder** as a development environment for your Python scripts.
 
 To create a new virtual environment with Python 2.7 and activate it, you can open the Anaconda prompt and execute the following commands:
 ```
@@ -109,7 +118,7 @@ Meaningful and unique names should be used for each of the pipeline steps.
 
 ### Relevant pipeline operations
 
-All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be taken from standard classes in the ```apache_beam``` library, possibly extended or customized. They all take one or more PCollections as input and return zero or more PCollections as output.
+All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be taken from standard classes in the ```apache_beam``` library, possibly extended or customized. They all take zero or more PCollections as input and return zero or more PCollections as output.
 
 Our script uses the following Apache Beam classes to define the various processing steps. Here we just give a quick and rather informal overview; for further details, the official [Apache Beam Programming Guide](https://beam.apache.org/documentation/programming-guide/) can be consulted.
 
@@ -229,7 +238,7 @@ The syntax is
 Given an input PCollection, returns a PCollection with elements (value, number of elements with value = value in input PCollection) for each distinct element value in the input PCollection.
 
 ### Pipeline structure
-The file {filename_processed_files}.txt contains the list of all Avro files that have already been processed. It is updated dynamically at every launch.
+The file filename_processed_files contains the list of all Avro files that have already been processed. It is updated dynamically at every launch.
 
 **Basic pipeline** (first launch)
 
@@ -246,4 +255,4 @@ Being a managed service, Dataflow automatically increases or decreases the numbe
 
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/autoscaling.png)
 
-In the above plot, the ideal amount of workers could not be reached due to limitations set by the system administrator (adding more workers increases service costs).
+In the above plot, the target amount of workers could not be reached due to limitations set by the system administrator (adding more workers increases service costs).
