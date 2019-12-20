@@ -1,6 +1,6 @@
 # Data Exploration with Apache Beam
 
-This script implements a sample Apache Beam pipeline to extract key **aggregate information** and quality metrics (number of corrupted records, most frequent values for each field, number of record insertions by time period...) from **huge amounts of raw relational data**.
+This script implements a sample Apache Beam pipeline to extract key **aggregate information** and quality metrics (number of corrupted records, most frequent values for each field, number of record insertions by time period...) from **huge amounts of raw relational data** stored in a data lake.
 
 Being written in **Python**, it is ideal for Data Scientists who need to perform an initial data exploration in order to identify potential opportunities for Machine Learning models development.
 
