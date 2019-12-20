@@ -83,7 +83,7 @@ In order to store the computation's results somewhere, you could end your pipeli
 ```python
 (final_output | 'write results' >> method_that_writes_results_to_some_file())
 ```
-Branching pipelines may also be defined: for example, adding a few more rows like
+Branching pipelines may also be defined: for example, adding a few more lines like
 ```python
 side_output = (intermediate_output | 'alternative processing' 	 >> alternative_processing_method()
 				   | 'write alternative results' >> method_that_writes_results_to_some_file())
@@ -173,14 +173,18 @@ We use CombinePerKey instead of GroupByKey because of better performance.
 The file {filename_processed_files}.txt contains the list of all Avro files that have already been processed. It is updated dynamically at every launch.
 
 **Basic pipeline** (first launch)
+
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/pipeline-basic.png)
 
 **Incremental pipeline** (successive launches)
+
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/pipeline-incremental.png)
 
 ### Monitoring Dataflow jobs
 The job may take up to a few minutes to appear in the list of running jobs in the Dataflow section in your Google Cloud project. Clicking on the job name, the pipeline and all related information are displayed and updated dynamically as the job progresses.
 
 Being a managed service, Dataflow automatically increases or decreases the number of working machines according to the amount of data being processed. This **autoscaling** process can be monitored in a time series plot:
+
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/autoscaling.png)
+
 In the above plot, the ideal amount of workers could not be reached due to limitations set by the system administrator (adding more workers increases service costs).
