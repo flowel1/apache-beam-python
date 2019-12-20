@@ -6,7 +6,7 @@ Being written in **Python**, it is ideal for Data Scientists who need to perform
 
 ## Use cases
 
-Data lakes are typically populated with large amounts of raw data ingested from many heterogeneous source systems. Understanding the data's content and quality can often prove to be challenging, especially if no unified data governance policy has been adopted in the organization up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
+**Data lakes** are typically populated with large amounts of raw data ingested from many heterogeneous source systems. Understanding the data's content and quality can often prove to be challenging, especially if no unified data governance policy has been adopted in the organization up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
 
 Understanding the data is crucial in order to define further processing steps like data normalization, re-mapping or transfer to a data warehouse where they can be analyzed, displayed in dashboards or fed into Machine Learning models.
 
