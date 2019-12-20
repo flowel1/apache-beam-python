@@ -119,15 +119,15 @@ def run(argv = None):
     
     # Retrieve list of files to process.
     # If another analysis has already been run, only the new files are analyzed and the results are then merged
-    # with those from the last analysis.
+    # with those from the last analysis in an incremental way.
     files_to_process = ['gs://{}'.format(fpath) for fpath in fs.walk(known_args.input_bucket)]
     is_first_analysis = True
     if known_args.last_analysis_bucket is not None:
         # the filename_processed_files file contains the list of all files that have already been processed
         # together with the id of the job where they have been processed, e.g.:
-        # gs://all-my-data/system1/table1/data00001.avro    job_id_00001
-        # gs://all-my-data/system1/table1/data00002.avro    job_id_00001
-        # gs://all-my-data/system1/table1/data00003.avro    job_id_00002
+        # gs://all-my-data/system1/table1/data00001.avro    job_id_abc
+        # gs://all-my-data/system1/table1/data00002.avro    job_id_abc
+        # gs://all-my-data/system1/table1/data00003.avro    job_id_xyz
         with fs.open(known_args.last_analysis_bucket+filename_processed_files) as f:
             already_processed_files = [row.split('\t')[0] for row in f.read().split('\r\n')]
             files_to_process = list(set(files_to_process) - set(already_processed_files)) # rule out files that have already been processed
@@ -148,10 +148,7 @@ def run(argv = None):
     valid_inputs  = processed_input[None] # main output
     invalid_times = processed_input[ParseRowDoFn.OUTPUT_TAG_INVALID] # secondary output: list of invalid insertion times
     
-    
-    #-------------------#
-    # PIPELINE BRANCH 1 # - count distinct values with min/max insertion time; filter 10 most frequent values for each column
-    #-------------------#
+    # PIPELINE BRANCH 1: count distinct values with min/max insertion time; filter 10 most frequent values for each column
     # This performs the equivalent of:
     #       select
     #           col, vtype, value
@@ -187,7 +184,6 @@ def run(argv = None):
     # CountMinMaxCombineFn is called for each (col, vtype, value) and operates on element = record_insertion_time.
     # Output: ((col, vtype, value), (count, min_record_insertion_time, max_record_insertion_time))
     # (the output is grouped by key = (col, vtype, value))
-    # [! AVOID using beam.GroupByKey - it is unsustainably slow]
     distinct_values = (valid_inputs
                        | 'value_counts' >> beam.CombinePerKey(CountMinMaxCombineFn())
                        )
@@ -211,11 +207,11 @@ def run(argv = None):
             # input: ((col, vtype, value), [[(counts, mindate, maxdate)], [(counts_last, mindate_last, maxdate_last)])
             curr_valuecounts, last_valuecounts = x[1]
             # Case 1: value was just in new data and does not appear in old data
-            if len(last_valuecounts) == 0: # this is a new value
+            if len(last_valuecounts) == 0:
                 return (x[0], curr_valuecounts[0])
             last_valuecounts = last_valuecounts[0]
             # Case 2: value was just in old data and does not appear in new data
-            if len(curr_valuecounts) == 0: # old value that has not appeared again in the new data
+            if len(curr_valuecounts) == 0:
                 return (x[0], last_valuecounts)
             # Case 3: value was both in old and in new data --> must merge the two results
             curr_valuecounts = curr_valuecounts[0]
@@ -229,7 +225,7 @@ def run(argv = None):
                             )
         # keep name distinct_values for the final output, so that it has the exact same form as it would have if is_first_analysis = True
 
-    # *** Save *ALL* value counts for all columns (needed for incremental analysis) 
+    # Save *ALL* value counts for all columns (needed for incremental analysis) 
     (distinct_values # see https://www.freeformatter.com/csv-escape.html for an explanation on how to escape " characters
      | 'format_valuecounts' >> beam.Map(lambda x : x[0][0]+'\t'+x[0][1]+'\t"'+unicode(x[0][2].replace('"', '""'))+'"\t'+ \
                                                  ('\t'.join([unicode(el) for el in x[1]])))
@@ -239,7 +235,7 @@ def run(argv = None):
     # col	vtype	value	counts	mindate	maxdate
     # (values are separated by \t)
     
-    # *** Filter and save TOP 10 VALUES (together with counts and min / max insertion time)
+    # Filter and save TOP 10 VALUES (together with counts and min / max insertion time)
     def remap_for_filter(x): # input: ((col, vtype, value), (counts, mintime, maxtime))
         ctv, values = x
         return (ctv[0], ctv[1]), (values[0], (ctv[2], values[1], values[2])) # <--- beam.combiners.Top.LargestPerKey requires arguments 
@@ -275,11 +271,7 @@ def run(argv = None):
      | 'save_top_values'   >> beam.io.WriteToText(known_args.output_bucket+'topvalues')
      )
     
-
-    #-------------------#
-    # PIPELINE BRANCH 2 # - count total and null values by period (= year/month in this case)
-    #-------------------#
-
+    # PIPELINE BRANCH 2: count total and null values by period (= year/month in this case)
     # Performs the equivalent of:
     #   select
     #       col,
@@ -371,9 +363,7 @@ def run(argv = None):
     # col   period   nulls   counts
     # (values are separated by \t)
 
-    #-------------------#
-    # PIPELINE BRANCH 3 # - count invalid record insertion times (by value)
-    #-------------------#
+    # PIPELINE BRANCH 3: count invalid record insertion times (by value)
     
     # invalid_times is a simple PCollection of values, e.g. [null, 'kjn12xu81yu', -999, null]
     (invalid_times
@@ -404,7 +394,7 @@ if __name__ == '__main__':
             
     print(tables.keys())
         
-    for system_table in sorted(tables.keys())[:1]:
+    for system_table in sorted(tables.keys()):
         
         print("\n\n\n*** LAUNCHING DATAFLOW JOB FOR TABLE: {}\n".format(system_table))
         
