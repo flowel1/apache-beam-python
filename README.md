@@ -80,7 +80,7 @@ if __name__ == '__main__':
 	run(args)
 ```
 
-Pipeline steps must be written in the following form:
+Pipeline steps must be written in the following form (here we provide a toy example with token names):
 ```python
 input_data = (p | 'read data' >> method_to_read_data())
 intermediate_output = (input_data | 'processing step 1' >> some_method(some_arguments)
