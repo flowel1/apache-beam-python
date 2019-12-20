@@ -111,7 +111,7 @@ Meaningful and unique names should be used for each of the pipeline steps.
 
 All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be taken from standard classes in the ```apache_beam``` library, possibly extended or customized. They all take one or more PCollections as input and return zero or more PCollections as output.
 
-Our script uses the following Apache Beam classes to define the various processing steps:
+Our script uses the following Apache Beam classes to define the various processing steps. Here we just give a quick and rather informal overview; for further details, the official [Apache Beam Programming Guide](https://beam.apache.org/documentation/programming-guide/) can be consulted.
 
 - ```beam.Create```
 
@@ -175,45 +175,58 @@ When elements in the input PCollection are tuples of the form (key, value), the 
 
 Custom aggregation functions can be defined by creating a subclass of ```beam.transforms.core.CombineFn```, say ```MyCombineFn```, and then calling ```beam.CombinePerKey(MyCombineFn())``` in the pipeline step.
 
-The aggregation result is updated dynamically as soon as new elements are processed. Its temporary value, which is constantly updated until it reaches its final value, is stored in a so-called "accumulator" variable, which is a tuple consisting of one or more elements (one for each aggregate function we define).
+The aggregation result is updated dynamically as soon as new elements are processed. Its temporary value, which is constantly updated until it reaches its final value, is stored in a so-called "accumulator" variable, which is a tuple consisting of one or more elements (one for each aggregate function we define in the ```beam.transforms.core.CombineFn``` subclass).
 
-In practice, multiple accumulators are initialized and updated in parallel on separate chunks of the input data and then merged once their computation is complete, so we must also define methods to merge two or more accumulators.
+In practice, multiple accumulators are initialized and updated in parallel on separate chunks of the input data and then merged once their computation is complete.
+
+When writing our custom subclass of ```beam.transforms.core.CombineFn```, we must define the following methods:
 
 ```python
 class MyCombineFn(beam.transforms.core.CombineFn):
     def create_accumulator(self):
         # must define the initial value for the accumulator and return it.
-        # The ideal choice of initial value is usually quite natural: for example, one should use 0 
+	# The accumulator is a tuple with one element for each aggregation we want to calculate.
+        # The ideal choice of initial values is usually quite natural: for example, one should use 0 
         # if the aggregate function is a count, or an upper bound (e.g. 1E+50) if it is a min. 
-        # If multiple aggregate functions are calculated in the same accumulator, a tuple should be 
-        # defined containing the initial values of all the functions.
+        # If multiple aggregation functions are calculated in the same accumulator, a tuple should be 
+        # defined containing the initial values for all the aggregation functions.
 
     def add_input(self, accumulator, element):
-        # must define how the accumulator components must be updated when ONE new element element
-        # appears; must return the updated accumulator components
+        # must define how the accumulator components must be updated when ONE new element
+	# of the PCollection is passed to be processed; must return the updated accumulator components
 
     def add_inputs(self, accumulator, elements):
         # must define how the accumulator components must be updated when A LIST OF new elements
-        # is processed; must return the updated accumulator components (same as add_input but 
-        # with multiple elements instead of only one)
+        # in the input PCollection is passed to be processed; must return the updated accumulator components
+	# (same as add_input, but with multiple input elements instead of only one)
 
     def merge_accumulators(self, accumulators):
         # must define how to merge multiple accumulators that have been calculated separately on 
         # distinct subsets of elements. In practice, these multiple accumulators will come from distinct 
-        # parallel computations whose final results are eventually merged.
+        # parallel computations whose final results must eventually be merged.
         # Must return the merged accumulator components
 
     def extract_output(self, accumulator):
-        # must define which output must be returned when the computation of accumulator has ended.
+        # must define which output must be returned when the computation of the accumulator has ended.
         # Typically, it is trivially equal to "return accumulator"
 ```
 
-```beam.Map```: similar to ```beam.ParDo```, but simpler: can take a lambda function as input. Ok for basic operations like, e.g., tranforming pipeline results to strings prior to writing them to an output .txt file.
+- ```beam.combiners.Top.LargestPerKey(n)```
 
-```beam.combiners.Top.LargestPerKey(10)```
-(key, (size, value)) --> extracts the top 10 elements with largest size
+Given an input PCollection with elements of the form (key, (size, value)), extracts the top n elements with largest size (n must be an integer number greater than 0).
 
-We use CombinePerKey instead of GroupByKey because of better performance.
+- ```beam.CoGroupByKey```
+
+Given two or more input PCollections with elements of the form (key, value), returns a PCollection whose elements are of the form (key, [list of values for elements in input PCollection having key = key]).
+
+The syntax is
+```python
+((input_pcollection_1, input_pcollection_2, ..., input_pcollection_n) | 'cogroup' >> beam.CoGroupByKey())
+```
+
+- ```beam.combiners.Count.PerElement```
+
+Given an input PCollection, returns a PCollection with elements (value, number of elements with value = value in input PCollection) for each distinct element value in the input PCollection.
 
 ### Pipeline structure
 The file {filename_processed_files}.txt contains the list of all Avro files that have already been processed. It is updated dynamically at every launch.
