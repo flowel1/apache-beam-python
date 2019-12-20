@@ -6,7 +6,7 @@ Being written in **Python**, it is ideal for Data Scientists who need to perform
 
 ## Use cases
 
-**Data lakes** are typically populated with large amounts of raw data ingested from many heterogeneous source systems. Understanding the data's content and quality can often prove to be challenging, especially if no unified data governance policy has been adopted in the organization up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
+Data lakes are typically populated with large amounts of raw data ingested from many heterogeneous source systems. Understanding the data's content and quality can often prove to be challenging, especially if no unified data governance policy has been adopted in the organization up to that moment. Some fields may contain valuable information deserving further analysis, while others may be obsolete or no longer populated. Moreover, corrupted or erroneous records may be present in unpredictable quantities.
 
 **Understanding the data** is crucial in order to define further processing steps like data normalization, re-mapping or transfer to a data warehouse where they can be analyzed, displayed in dashboards or fed into Machine Learning models.
 
@@ -16,10 +16,10 @@ For limited amounts of data, all these calculations can be executed very straigh
 
 For Data Scientists with limited experience with Java / Scala and parallel computation frameworks like Apache Spark, a good solution can be to write an **Apache Beam** pipeline in Python and run it on a **managed paid service** like Google Dataflow. Using a managed service has the advantage of not having to worry about dev-ops issues like cluster provisioning and management. All the analyst has to do is write the pipeline using the methods provided by apache_beam, which is not different from using any other Python library, and then submit the script to Google Dataflow by calling a dedicated API. The script will be executed in parallel on machines in Google's cloud.
 
-## Our example: Google Cloud Platform and Avro files
-We consider a use case where raw data are exported from several source systems and ingested into Google Cloud Storage buckets as Avro files. We assume that the bucket hierarchy has the following structure:
+## Our example: analyzing Avro files in Google Cloud Storage
+We consider a use case where raw data are exported from several source systems and ingested into **Google Cloud Storage** buckets as **Avro files**. We assume that the bucket hierarchy has the following structure:
 ```
-all-my-data
+all-my-data (main bucket)
 	  system-1
 		    table-1-1
 			      ...avro files
