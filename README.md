@@ -109,7 +109,9 @@ Meaningful and unique names should be used for each of the pipeline steps.
 
 ### Relevant pipeline operations
 
-All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be taken from standard classes in the ```apache_beam``` library, possibly extended or customized. Our script uses the following Apache Beam classes to define the various processing steps.
+All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be taken from standard classes in the ```apache_beam``` library, possibly extended or customized. They all take one or more PCollections as input and return zero or more PCollections as output.
+
+Our script uses the following Apache Beam classes to define the various processing steps:
 
 - ```beam.Create```
 
@@ -124,32 +126,40 @@ Takes a PCollection of Avro file paths as input and returns the contents of all 
 Reads the contents of the .txt file identified by path file_pattern and returns its contents into a PCollection. Each element in the PCollection is a string containing one row in the input file.
 
 - ```beam.io.WriteToText(file_pattern)```
+
 Takes a PCollection of strings as input and writes them all into the .txt file identified by path file_pattern.
 
+- ```beam.Map(python_function)```
 
-Given a subclass of ```beam.DoFn```, say ```MyDoFn```, ```beam.ParDo(MyDoFn())``` runs the method "process" defined in ```MyDoFn``` on all elements of the input collection. The computation is performed in parallel.
-The method ```process``` should return outputs in the form of pairs (key, value). If you want to return a dynamically generated list of outputs, use ```yield``` instead of ```return```.
-```process``` may also return multiple distinct PCollections through tagged outputs:
+```python_function``` may be either a simple lambda function or a more complex function defined within a ```def my_function(x):``` code block. ```beam.Map``` applies the function ```python_function``` to all elements in the input PCollection and outputs the PCollection of transformed elements.
 
-[PSEUDO-CODE]
+- ```beam.ParDo(MyDoFn)``` 
+
+This is similar to ```beam.Map``` (which can be though of as a special case of ```beam.ParDo```), but with a more complex structure that allows to return multiple output PCollections instead of only one.
+
+More in detail, iven a custom subclass of the class ```beam.DoFn```, say ```MyDoFn```, ```beam.ParDo(MyDoFn())``` runs the method "process" defined in ```MyDoFn``` on all elements of the input PCollection and returns the PCollection of transformed outputs. As the name ParDo suggests, the computation is performed in parallel.
+
+```process``` may also return multiple distinct PCollections through the tagged outputs mechanism, which we illustrate in the toy example below:
+
 ```
 class MyDoFn(beam.DoFn):
 
 	OUTPUT_TAG_1 = 'tag 1'
 	OUTPUT_TAG_2 = 'tag 2'
 
-	def process(self, input_collection):
+	def process(self, element_in_input_collection):
 		if some_condition:
-			yield default_output
+			yield default_transform(element_in_input_collection)
 		elif some_other_condition:
-			yield beam.pvalue.TaggedOutput(self.OUTPUT_TAG_1, alternative_output_1)
+			yield beam.pvalue.TaggedOutput(self.OUTPUT_TAG_1, alternative_transform_1(element_in_input_collection))
 		else:
-			yield beam.pvalue.TaggedOutput(self.OUTPUT_TAG_2, alternative_output_2)
+			yield beam.pvalue.TaggedOutput(self.OUTPUT_TAG_2, alternative_transform_2(element_in_input_collection))
 
 output_collection = (input_collection | 'apply MyDoFn' >> beam.ParDo(MyDoFn()).with_outputs())
 
-default_outputs, alternative_outputs_1, alternative_outputs_2 = output_collection[None], output_collection[MyDoFn.TAG1], output_collection[MyDoFn.TAG2]
+default_outputs, alternative_outputs_1, alternative_outputs_2 = output_collection[None], output_collection[MyDoFn.TAG1], output_collection[MyDoFn.TAG2] # in this case, beam.ParDo outputs three PCollections starting from a single PCollection
 
+# go on with processing; apply a different logic to each of the three output PCollections
 std_pipeline = (default_outputs | 'apply some method' >> ...)
 branch_1 = (alternative_outputs_1 | 'apply some other method' >> ...)
 branch_2 = (alternative_outputs_2 | 'apply some third method' >> ...)
