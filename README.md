@@ -91,7 +91,9 @@ side_output = (intermediate_output | 'alternative processing' 	 >> alternative_p
 ```
 generates a pipeline like this:
 
-Try to use meaningful names for the steps.
+<img src="https://github.com/flowel1/apache-beam-python/blob/master/pictures/sample-pipeline.png" width="500">
+
+Meaningful and unique names should be used for the pipeline steps.
 
 If you need non-default packages in your script, you can list them in a ```requirements.txt``` file and provide the local file path as an input argument ```--requirements_file```.
 
