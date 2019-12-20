@@ -65,7 +65,7 @@ def run(args):
 	pipeline_options = PipelineOptions(pipeline_args)
 	p = beam.Pipeline(options = pipeline_options) # this declares your pipeline
 
-	# write all your pipeline definition + auxiliary methods
+	# write all pipeline steps + related auxiliary methods
 	# ...
 	# ...
 
