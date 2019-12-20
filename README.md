@@ -51,7 +51,7 @@ pip install gcsfs
 Finally, installing the **Google Cloud SDK** will enable you to transfer files to Google Cloud Storage using the ```gsutil``` command in the command prompt.
 
 
-### Pipeline development and submission
+### Pipeline definition and submission
 
 The Python script containing the pipeline definition and execution call can be written locally using any development environment (like Spyder). In the execution call, you must specify whether you want the pipeline to be executed locally on your computer (option ```runner = DirectRunner```) or in Google Dataflow (option ```runner = DataflowRunner```).
 Local execution only makes sense for testing and bug fixing and should be launched on just a small subset of the available data (perhaps one or two Avro files), since a personal laptop would most likely take ages to run the whole job or not make it at all - which is the reason why we borrow Google's resources instead.
@@ -59,8 +59,6 @@ Local execution only makes sense for testing and bug fixing and should be launch
 NB. for simpler types of analysis, BigQuery can be used instead:
 create a table with external reference (must be done programmatically)
 run approx_top_count on each column.
-
-### Code structure
 
 Write your pipeline in a method called run
 ```python
@@ -89,7 +87,9 @@ In order to store the computation's results somewhere, you could end your pipeli
 
 Try to use meaningful names for the steps.
 
-The file {filename_processed_files}.txt contains the list of all Avro files that have already been processed. It is updated dynamically at every launch.
+If you need non-default packages in your script, you can list them in a ```requirements.txt``` file and provide the local file path as an input argument ```--requirements_file```.
+
+### Relevant pipeline operations
 
 Given a subclass of ```beam.DoFn```, say ```MyDoFn```, ```beam.ParDo(MyDoFn())``` runs the method "process" defined in ```MyDoFn``` on all elements of the input collection. The computation is performed in parallel.
 The method ```process``` should return outputs in the form of pairs (key, value). If you want to return a dynamically generated list of outputs, use ```yield``` instead of ```return```.
@@ -159,6 +159,7 @@ class MyCombineFn(beam.transforms.core.CombineFn):
 ```beam.combiners.Top.LargestPerKey(10)```
 (key, (size, value)) --> extracts the top 10 elements with largest size
 
-If you need non-default packages in your script, you can list them in a ```requirements.txt``` file and provide the local file path as an input argument ```--requirements_file```.
-
 We use CombinePerKey instead of GroupByKey because of better performance.
+
+## Incremental pipeline
+The file {filename_processed_files}.txt contains the list of all Avro files that have already been processed. It is updated dynamically at every launch.
