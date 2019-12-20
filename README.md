@@ -2,7 +2,7 @@
 
 This script implements a sample Apache Beam pipeline to extract key **aggregate information** and quality metrics (number of corrupted records, most frequent values for each field, number of record insertions by time period...) from **huge amounts of raw relational data**.
 
-Being written in **Python**, it is ideal for Data Scientists who need to perform an initial data exploration in order to identify potential opportunities to develop Machine Learning models.
+Being written in **Python**, it is ideal for Data Scientists who need to perform an initial data exploration in order to identify potential opportunities for Machine Learning models development.
 
 ## Use cases
 
