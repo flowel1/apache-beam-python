@@ -48,13 +48,15 @@ pip install gcsfs
 ```
 Finally, installing the **Google Cloud SDK** will enable you to transfer files to Google Cloud Storage using the ```gsutil``` command in the command prompt.
 
+If you have no prior experience with Apache Beam, we recommend reading the [Apache Beam Python SDK Quickstart](https://beam.apache.org/get-started/quickstart-py/]) and the related examples and documentation in order to familiarize with the basic concepts.
+
 
 ### Pipeline definition and submission
 
 The Python script containing the pipeline definition and execution call can be written locally using any development environment (like Spyder). In the execution call, you must specify whether you want the pipeline to be executed locally on your computer (option ```runner = DirectRunner```) or in Google Dataflow (option ```runner = DataflowRunner```).
 Local execution only makes sense for testing and bug fixing and should be launched on just a small subset of the available data (perhaps one or two Avro files), since a personal laptop would most likely take ages to run the whole job or not make it at all - which is the reason why we borrow Google's resources instead.
 
-The pipeline definition can be contained in a single script with the following structure:
+The pipeline definition is contained in a single script with the following structure:
 ```python
 import argparse
 import apache_beam as beam
@@ -74,11 +76,13 @@ def run(args):
 	
 if __name__ == '__main__':
 	args = ['--runner' 	      , "DataflowRunner", # "DirectRunner" to run locally
-		'--requirements_file' , path_to_local_rqmt_file
+		'--requirements_file' , "local\\path\\to\\rqmts\\file" # if you need non-default packages in your pipeline
 		# ...add all pipeline configuraion parameters here
 		]
 	run(args)
 ```
+
+If you need non-default packages in your script (like gcsfs), you can list them in a ```requirements.txt``` file and provide the local file path as an input argument ```--requirements_file```.
 
 Pipeline steps must be written in the following form (here we provide a toy example with token names):
 ```python
@@ -101,11 +105,13 @@ generates a pipeline like this:
 
 <img src="https://github.com/flowel1/apache-beam-python/blob/master/pictures/sample-pipeline.png" width="500">
 
-Meaningful and unique names should be used for the pipeline steps.
-
-If you need non-default packages in your script, you can list them in a ```requirements.txt``` file and provide the local file path as an input argument ```--requirements_file```.
+Meaningful and unique names should be used for each of the pipeline steps.
 
 ### Relevant pipeline operations
+
+All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be standard methods from the ```apache_beam``` library, possibly extended or customized.
+
+```beam.Create```
 
 Given a subclass of ```beam.DoFn```, say ```MyDoFn```, ```beam.ParDo(MyDoFn())``` runs the method "process" defined in ```MyDoFn``` on all elements of the input collection. The computation is performed in parallel.
 The method ```process``` should return outputs in the form of pairs (key, value). If you want to return a dynamically generated list of outputs, use ```yield``` instead of ```return```.
