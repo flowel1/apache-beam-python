@@ -28,7 +28,7 @@ For each table, we would like to:
 ### Prerequisites
 You need to have a project in Google Cloud with billing activated in order to run this script. You must also have IAM permissions to read from / write to the necessary Google Cloud Storage buckets and to submit jobs to Google Dataflow.
 
-The code is written using the Apache Beam SDK for Python. CAUTION: at the moment, **Python 2.7** must be used, since Apache Beam's version for Python 3 is still unstable. We expect this to change soon, since Python 2 will reach its end of life by January 2020.
+The code is written using the Apache Beam SDK for Python. At the moment, **Python 2.7** must be used, since Apache Beam's version for Python 3 is still unstable. We expect this to change soon, since Python 2 will reach its end of life by January 2020.
 
 We advise that you use **Anaconda** to manage Python environments and **Spyder** as a development environment for your Python scripts.
 
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 	run(args)
 ```
 
-Pipeline steps are defined by writing something like
+Pipeline steps must be written in the following form:
 ```python
 input_data = (p | 'read data' >> method_to_read_data())
 intermediate_output = (input_data | 'processing step 1' >> some_method(some_arguments)
