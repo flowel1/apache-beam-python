@@ -111,7 +111,21 @@ Meaningful and unique names should be used for each of the pipeline steps.
 
 All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be standard methods from the ```apache_beam``` library, possibly extended or customized.
 
-```beam.Create```
+- ```beam.Create```
+
+Transforms a list of elements into a PCollection (raw lists cannot be processed by Apache Beam pipelines: only PCollections can).
+
+- ```beam.io.avroio.ReadAllFromAvro```
+
+Takes a PCollection of Avro file paths as input and returns the contents of all files in a single PCollection. Each element in the output PCollection contains data from one row in one of the input files, in the form of a dictionary {column name : column value at the row}.
+
+- ```beam.io.ReadFromText(file_pattern)```
+
+Reads the contents of the .txt file identified by path file_pattern and returns its contents into a PCollection. Each element in the PCollection is a string containing one row in the input file.
+
+- ```beam.io.WriteToText(file_pattern)```
+
+
 
 Given a subclass of ```beam.DoFn```, say ```MyDoFn```, ```beam.ParDo(MyDoFn())``` runs the method "process" defined in ```MyDoFn``` on all elements of the input collection. The computation is performed in parallel.
 The method ```process``` should return outputs in the form of pairs (key, value). If you want to return a dynamically generated list of outputs, use ```yield``` instead of ```return```.
