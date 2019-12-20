@@ -32,55 +32,55 @@ You need to have a project in Google Cloud with billing activated in order to ru
 
 The code is written using the Apache Beam SDK for Python. CAUTION: at the moment, **Python 2.7** must be used, since Apache Beam's version for Python 3 is still unstable. We expect this to change soon, since Python 2 will reach its end of life by January 2020.
 
-We advise that you use **Anaconda** to manage Python environments and launch the script. To create a new virtual environment with Python 2.7 and activate it, you can open your Anaconda prompt and execute the following commands:
+We advise that you use **Anaconda** to manage Python environments and **Spyder** as a development environment for your Python scripts.
+
+To create a new virtual environment with Python 2.7 and activate it, you can open the Anaconda prompt and execute the following commands:
 ```
 conda create -n py27 python=2.7
 conda activate py27
 ```
-We also recommend **Spyder** as a development enviroment for your Python scripts.
 
 The command to install the **Apache Beam SDK** is
 ```
 pip install apache-beam
 ```
-We also need to install the gcsfs package to read from and write to Google Cloud Storage:
+You will also need to install the gcsfs package to read from and write to Google Cloud Storage:
 ```
 pip install gcsfs
 ```
-Installing the **Google Cloud SDK** will enable you to transfer files to Google Cloud Storage using the ```gsutil``` command in the command prompt.
+Finally, installing the **Google Cloud SDK** will enable you to transfer files to Google Cloud Storage using the ```gsutil``` command in the command prompt.
 
 
 ### Pipeline development and submission
 
-The Python script containing the pipeline definition and execution call can be written locally using any development environment (e.g. Spyder). In the execution call, you must specify whether you want the pipeline to be executed locally on your computer (option ```runner = DirectRunne```r) or in Google Dataflow (option ```runner = DataflowRunner```).
+The Python script containing the pipeline definition and execution call can be written locally using any development environment (like Spyder). In the execution call, you must specify whether you want the pipeline to be executed locally on your computer (option ```runner = DirectRunner```) or in Google Dataflow (option ```runner = DataflowRunner```).
 Local execution only makes sense for testing and bug fixing and should be launched on just a small subset of the available data (perhaps one or two Avro files), since a personal laptop would most likely take ages to run the whole job or not make it at all - which is the reason why we borrow Google's resources instead.
 
 NB. for simpler types of analysis, BigQuery can be used instead:
 create a table with external reference (must be done programmatically)
 run approx_top_count on each column.
 
-## Code structure
+### Code structure
 
 Write your pipeline in a method called run
 ```python
-def run(argv): # argv
-    known_args, pipeline_args = parser.parse_known_args(argv)
-    
-    pipeline_options = PipelineOptions(pipeline_args)
-    pipeline_options.view_as(SetupOptions).save_main_session = True
-    p = beam.Pipeline(options = pipeline_options) # this declares your pipeline
-    
-    # write all your pipeline definition + auxiliary methods
-    
-    result = p.run()
-    result.wait_until_finish()    
+import apache_beam as beam
+from apache_beam.options.pipeline_options import PipelineOptions
+
+pipeline_options = PipelineOptions(pipeline_args)
+p = beam.Pipeline(options = pipeline_options) # this declares your pipeline
+
+# write all your pipeline definition + auxiliary methods
+
+result = p.run()
+result.wait_until_finish()    
 ```
 
 Pipeline steps are defined by writing something like
 ```python
-intermediate_output = (p | 'step 1' >> some_method() # the definition of some_method must also be provided
-			                   | 'step 2' >> some_other_method())
-final_output = (intermediate_output | 'step 3' >> yet_another_method())
+intermediate_output = (p | 'step 1' >> some_method(some_arguments) # the definition of some_method must also be provided
+			 | 'step 2' >> some_other_method(some_other_arguments))
+final_output = (intermediate_output | 'step 3' >> yet_another_method(yet_other_arguments))
 ```
 In order to store the computation's results somewhere, you could end your pipeline with
 ```python
