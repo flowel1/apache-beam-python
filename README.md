@@ -133,11 +133,11 @@ Takes a PCollection of strings as input and writes them all into the .txt file i
 
 ```python_function``` may be either a simple lambda function or a more complex function defined within a ```def my_function(x):``` code block. ```beam.Map``` applies the function ```python_function``` to all elements in the input PCollection and outputs the PCollection of transformed elements.
 
-- ```beam.ParDo(MyDoFn)``` 
+- ```beam.ParDo(MyDoFn())``` 
 
-This is similar to ```beam.Map``` (which can be though of as a special case of ```beam.ParDo```), but with a more complex structure that allows to return multiple output PCollections instead of only one.
+Similar to ```beam.Map``` (which can be though of as a special case of ```beam.ParDo```), but with a more complex structure that allows for multiple output PCollections to be returned instead of only one.
 
-More in detail, iven a custom subclass of the class ```beam.DoFn```, say ```MyDoFn```, ```beam.ParDo(MyDoFn())``` runs the method "process" defined in ```MyDoFn``` on all elements of the input PCollection and returns the PCollection of transformed outputs. As the name ParDo suggests, the computation is performed in parallel.
+More in detail, given a custom subclass of the ```beam.DoFn``` class, say ```MyDoFn```, ```beam.ParDo(MyDoFn())``` runs the method "process" defined in ```MyDoFn``` on all elements of the input PCollection and returns the PCollection of transformed outputs. As the name ParDo suggests, the computation is performed in parallel.
 
 ```process``` may also return multiple distinct PCollections through the tagged outputs mechanism, which we illustrate in the toy example below:
 
@@ -165,12 +165,20 @@ branch_1 = (alternative_outputs_1 | 'apply some other method' >> ...)
 branch_2 = (alternative_outputs_2 | 'apply some third method' >> ...)
 ```
 
-Each branch of the pipeline proceeds independently.
+After the output of _apply MyDoFn_ has been collected, the pipeline splits into three and each branch proceeds independently.
 
-```beam.ParDo``` is ok when elements in the input collection must be processed independently, but what if we need to make some "group by" operations? Elements in a collection are always of the form (key, value) and Apache Beam allows us to do the equivalent of a "group by key". The key should therefore be defined based on the aggregation we want to perform.
-We can define custom aggregation functions by creating a subclass of ```beam.transforms.core.CombineFn```, say ```MyCombineFn```, and then calling ```beam.CombinePerKey(MyCombineFn())```.
-For each key, the aggregation result is stored in a so-called "accumulator" variable, which is a tuple consisting of one or more elements (one for each aggregate function we define). The accumulator is initialized and then updated dynamically as soon as new elements arrive. We must define both the initialization and the updating methods.
-Multiple accumulators are initialized and updated in parallel on separate chunks of the input data and then merged once their computation is complete, so we must also define methods to merge two or more accumulators.
+- ```beam.CombinePerKey(MyCombineFn())```
+
+```beam.ParDo``` and ```beam.Map``` are ok when elements in the input PCollection must be processed independently, but what if we need to make some "group by" operations?
+
+When elements in the input PCollection are tuples of the form (key, value), the equivalent of a "group by key" operation can be performed using the ```beam.CombinePerKey``` class. This implies that the key should be defined based on the aggregation we want to perform at a particular step.
+
+Custom aggregation functions can be defined by creating a subclass of ```beam.transforms.core.CombineFn```, say ```MyCombineFn```, and then calling ```beam.CombinePerKey(MyCombineFn())``` in the pipeline step.
+
+The aggregation result is updated dynamically as soon as new elements are processed. Its temporary value, which is constantly updated until it reaches its final value, is stored in a so-called "accumulator" variable, which is a tuple consisting of one or more elements (one for each aggregate function we define).
+
+In practice, multiple accumulators are initialized and updated in parallel on separate chunks of the input data and then merged once their computation is complete, so we must also define methods to merge two or more accumulators.
+
 ```python
 class MyCombineFn(beam.transforms.core.CombineFn):
     def create_accumulator(self):
