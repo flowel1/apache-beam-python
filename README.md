@@ -171,4 +171,7 @@ The file {filename_processed_files}.txt contains the list of all Avro files that
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/pipeline-incremental.png)
 
 ### Monitoring Dataflow jobs
+The job may take up to a few minutes to appear in the list of running jobs in the Dataflow section in your Google Cloud project. Clicking on the job name, the pipeline and all related information are displayed and updated dynamically as the job progresses.
 
+Being a managed service, Dataflow automatically increases or decreases the number of working machines according to the amount of data being processed. This **autoscaling** process can be monitored in a time series plot:
+![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/autoscaling.png)
