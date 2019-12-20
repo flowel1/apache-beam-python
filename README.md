@@ -17,7 +17,7 @@ For Data Scientists with limited experience with Java / Scala and parallel compu
 ## Our case: analyzing Avro files in Google Cloud Storage with Google Dataflow
 We consider a use case where raw data are exported from several source systems and ingested into **Google Cloud Storage** buckets as **Avro files**. We assume that the bucket hierarchy has the following structure:
 
-<img src="https://github.com/flowel1/apache-beam-python/blob/master/pictures/bucket-hierarchy.png" width="200">
+<img src="https://github.com/flowel1/apache-beam-python/blob/master/pictures/bucket-hierarchy.png" width="400">
 
 We assume moreover that each table contains a technical column, say RECORD_INSERTION_TIME, containing the datetime when the record was inserted into the source table.
 For each table, we would like to:
