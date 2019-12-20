@@ -169,3 +169,6 @@ The file {filename_processed_files}.txt contains the list of all Avro files that
 
 **Incremental pipeline** (successive launches)
 ![alt-text](https://github.com/flowel1/apache-beam-python/blob/master/pictures/pipeline-incremental.png)
+
+### Monitoring Dataflow jobs
+
