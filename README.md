@@ -29,7 +29,7 @@ Some of the questions we would like to answer are:
 
 3) Are there any obsolete values in the columns (that have stopped being used after a certain moment in time to be replaced by some other value)?
 
-Our pipeline helps addressing these question by doing the following:
+Our pipeline helps addressing these questions by doing the following:
 - for each column, find the different data types in the column (including nulls) and the top 10 most frequent values by type with the corresponding minimum and maximum RECORD_INSERTION_TIME values
 - for each column and each time period (say, year-month), count the amount of records and null records inserted. This is useful in order to detect cases when data for a given column have only started being ingested after a certain time, or when they have stopped being ingested after a certain time.
 - in order to avoid crashes, filter out the records with null or erroneous (i.e., non-datetime) values of RECORD_INSERTION_TIME and store these values in a dedicated file.
@@ -120,7 +120,7 @@ Meaningful and unique names should be used for each of the pipeline steps.
 
 All processing methods called in the various pipeline steps (```some_method```, ```some_other_method``` etc. in the toy example above) must be taken from standard classes in the ```apache_beam``` library, possibly extended or customized. They all take zero or more PCollections as input and return zero or more PCollections as output.
 
-Our script uses the following Apache Beam classes to define the various processing steps. Here we just give a quick and rather informal overview; for further details, the official [Apache Beam Programming Guide](https://beam.apache.org/documentation/programming-guide/) can be consulted.
+Our script uses the following Apache Beam classes to define the various processing steps. Here we just provide a quick overview; for further details, the official [Apache Beam Programming Guide](https://beam.apache.org/documentation/programming-guide/) can be consulted.
 
 - ```beam.Create```
 
